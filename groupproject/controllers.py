@@ -36,6 +36,8 @@ from py4web.utils.url_signer import URLSigner
 from .models import get_user_email
 
 url_signer = URLSigner(session)
+MAX_RETURNED_USERS = 20  # Our searches do not return more than 20 users.
+MAX_RESULTS = 20  # Maximum number of returned meows.
 
 @action('index')
 @action.uses('index.html',db, auth, url_signer)
@@ -50,6 +52,8 @@ def index():
         upload_thumbnail_url = URL('upload_thumbnail', signer=url_signer),
         post=post,
         my_callback_url=URL('my_callback', signer=url_signer),
+        get_users_url=URL('get_users', signer=url_signer),
+        follow_url=URL('set_follow', signer=url_signer),
     )
 @action('my_callback')
 @action.uses(url_signer.verify())
@@ -140,3 +144,35 @@ def upload_thumbnail():
     thumbnail = request.json.get("thumbnail")
     db(db.contact.id == contact_id).update(thumbnail=thumbnail)
     return "ok"
+
+@action('get_users')
+@action.uses(auth.user, url_signer.verify(), db)
+def get_users():
+    q = request.params.get('q', "")
+    followed_users = db(db.follow.user_id == auth.current_user.get('id')).select().as_list()
+    followed_user_ids = [followed['follows_id'] for followed in followed_users]
+    users = db((db.auth_user.id != auth.current_user.get('id')) &
+               (db.auth_user.username.startswith(q)) &
+               (db.auth_user.id.belongs(followed_user_ids))).select().as_list()[:MAX_RETURNED_USERS]
+    remaining_users = MAX_RETURNED_USERS - len(users)
+    if remaining_users > 0:
+        non_followed_users = db((db.auth_user.id != auth.current_user.get('id')) &
+                                (db.auth_user.username.startswith(q)) &
+                                (~db.auth_user.id.belongs(followed_user_ids))).select().as_list()[:remaining_users]
+        users.extend(non_followed_users)
+    for user in users:
+        user['following'] = user['id'] in followed_user_ids
+    return dict(users=users)
+
+
+@action('set_follow', method='POST')
+@action.uses(auth.user, url_signer.verify(), db)
+def set_follow():
+    user_id = request.json.get('user_id')
+    follow = request.json.get('follow')
+
+    if follow:
+        db.follow.insert(user_id=auth.current_user.get('id'), follows_id=user_id)
+    else:
+        db((db.follow.user_id == auth.current_user.get('id')) & (db.follow.follows_id == user_id)).delete()
+    return 'ok'

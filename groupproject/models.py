@@ -31,5 +31,10 @@ db.define_table(
     Field('like', 'integer', default=0, requires=IS_INT_IN_RANGE(0, 1e6)),
     Field('user_email', default=get_user_email),
 )
+db.define_table(
+    'follow',
+    Field('user_id', 'reference auth_user'),
+    Field('follows_id', 'reference auth_user')
+)
 
 db.commit()

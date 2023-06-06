@@ -44,3 +44,10 @@ CREATE TABLE "post"(
     "user_email" CHAR(512)
 );
 success!
+timestamp: 2023-06-05T15:52:30.495616
+CREATE TABLE "follow"(
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "user_id" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE ON UPDATE CASCADE  ,
+    "follows_id" INTEGER REFERENCES "auth_user" ("id") ON DELETE CASCADE ON UPDATE CASCADE  
+);
+success!

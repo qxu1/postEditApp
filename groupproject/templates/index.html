@@ -6,21 +6,22 @@
 }
 </style>
 
+
 <div class="section" id="vue-target" v-cloak>
 
   <div v-if="add_mode" class="container block">
-    <div class="title">Add Contact</div>
+    <div class="title">Add Post</div>
     <div class="form">
 
       <!-- This looks like a form, but is not.  We just need the inputs. -->
       <div class="field">
-        <label class="label">First Name:</label>
+        <label class="label">User:</label>
         <div class="control">
           <input type="text" v-model="add_first_name" class="input">
         </div>
       </div>
       <div class="field">
-        <label class="label">Last Name:</label>
+        <label class="label">Caption:</label>
         <div class="control">
           <input type="text" v-model="add_last_name" class="input">
         </div>
@@ -34,14 +35,14 @@
     </div>
   </div>
 
-
+<!-- display the home page post -->
   <div class="container block">
-    <h1 class="title">Contacts</h1>
+    <h1 class="title">Home page</h1>
     <table class="table is-striped is-fullwidth">
       <tr>
         <th></th>
-        <th>First Name</th>
-        <th>Last Name</th>
+        <th>User</th>
+        <th>Caption</th>
         <th></th>
       </tr>
       <tr v-for="r in rows">
@@ -64,7 +65,7 @@
             </p>
           </div>
 
-          <img v-if="r.thumbnail" width="50" :src="r.thumbnail" />
+          <img v-if="r.thumbnail" width="400" :src="r.thumbnail" />
 
         </td>
         <td v-for="fn in ['first_name', 'last_name']">
@@ -81,19 +82,20 @@
           </div>
         </td>
         <td><button @click="delete_contact(r._idx)" class="button is-danger">
-          <i class="fa fa-trash"></i></button></td>
+          <i class="fa fa-trash"></i>delete</button></td>
       </tr>
     </table>
     <button @click="set_add_status(true)" class="button is-primary">
-      <i class="fa fa-plus fa-fw"></i> Add Person
+      <i class="fa fa-plus fa-fw"></i> Add post
     </button>
   </div>
+
+  <!-- display the comments and likes -->
   <div class="section" id="vue-target" v-cloak>
-  <!-- Put here your Vue.js template -->
   <div class="container">
      <a class="button is-success" href="[[=URL('add')]]">
     <span class="icon"><i class="fa fa-plus"></i></span>
-    <span>Add New Photo</span>
+    <span>Comments</span>
   </a>
     <table class="table is-striped is-fullwidth">
       <tbody>
@@ -121,13 +123,45 @@
       </tbody>
     </table>
   </div>
-
 </div>
+
+  <!--
+<div class="section" id="vue-target" v-cloak>
+  <div class="field">
+    <p class="control has-icons-right">
+      <input class="input" type="text" placeholder="Search users" v-model="search" @input="search_users">
+      <span class="icon is-small is-right clickable" @click="clear_search">
+        <i class="fa fa-times-circle"></i>
+      </span>
+    </p>
+  </div>
+
+  <div class="field has-addons" v-for="user in users">
+    <p class="control">
+      <button class="button">
+        <span>{{ user.username }}</span>
+      </button>
+    </p>
+    <p class="control">
+      <button @click="following[user.id] ? unfollow(user.id) : follow(user.id)" class="button" :class="{'is-success': following[user.id], 'is-danger': !following[user.id]}">
+        <span class="icon is-small">
+          <i :class="{'fa fa-times': following[user.id], 'fa fa-check': !following[user.id]}"></i>
+        </span>
+        <span>{{ following[user.id] ? 'Follow' : 'Unfollow' }}</span>
+      </button>
+    </p>
+  </div>
+</div>
+
+-->
+
 
 
 [[block page_scripts]]
 <!-- Loads the index-specific js for Vue -->
 <script>
+  let get_users_url = "[[=XML(get_users_url)]]";
+  let follow_url = "[[=XML(follow_url)]]";
   let load_contacts_url = "[[=XML(load_contacts_url)]]";
   let add_contact_url = "[[=XML(add_contact_url)]]";
   let delete_contact_url = "[[=XML(delete_contact_url)]]";
