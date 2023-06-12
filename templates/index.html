@@ -8,152 +8,102 @@
 
 
 <div class="section" id="vue-target" v-cloak>
+<div v-if="add_mode" class="container block">
+  <div class="title">Choose a box color you like</div>
+  <div class="form">
+    <!-- This looks like a form, but is not. We just need the inputs. -->
+    <div class="field">
+      <div class="control">
+        <input type="submit" @click="add_contact" value="Add" class="button is-primary">
+        <input type="submit" @click="set_add_status(false)" value="Cancel" class="button is-warning">
+      </div>
+    </div>
+  </div>
+</div
 
-  <div v-if="add_mode" class="container block">
-    <div class="title">Add Post</div>
-    <div class="form">
+  <button @click="set_add_status(true)" class="button is-primary">
+      <i class="fa fa-plus fa-fw"></i> Add Image
+    </button>
+<!-- display the home page post -->
 
-      <!-- This looks like a form, but is not.  We just need the inputs. -->
-      <div class="field">
-        <label class="label">User:</label>
-        <div class="control">
-          <input type="text" v-model="add_first_name" class="input">
+
+<div v-for="r in rows" :key="r._idx" class="box is-mobile" style="width: 75%;">
+  <div class="content has-text-left">
+    <div class="field is-horizontal">
+      <div class="field-label is-normal is-left">
+        <label class="label">Title:</label>
+      </div>
+      <div class="field-body">
+        <div class="field">
+          <div class="control" :class="{'is-loading': r._state.first_name === 'pending'}">
+            <input type="text" class="input" v-model="r.first_name"
+                   :class="{
+                    'is-focused': r._state.first_name === 'edit',
+                    'is-static': r._state.first_name === 'clean',
+                  }"
+                   :readonly="r._state.first_name === 'clean'"
+                   @click="start_edit(r._idx, 'first_name')"
+                   @blur="stop_edit(r._idx, 'first_name')"
+            />
+          </div>
         </div>
       </div>
-      <div class="field">
+    </div>
+    <div class="content has-text-centered">
+      <div v-if="!r.thumbnail ">
+        <p class="control">
+          <div class="file is-info is-centered">
+            <label class="file-label">
+              <input class="file-input" type="file"
+                     accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*"
+                     @change="upload_file($event, r._idx)">
+              <span class="file-cta" style="width: 200px;">
+                <span class="file-label">
+                  <span><i class="fa fa-upload"></i></span>
+                </span>
+              </span>
+            </label>
+          </div>
+        </p>
+      </div>
+      <img v-else-if="r.thumbnail" width="600" :src="r.thumbnail" />
+    </div>
+    <div class="field is-horizontal">
+      <div class="field-label is-normal">
         <label class="label">Caption:</label>
-        <div class="control">
-          <input type="text" v-model="add_last_name" class="input">
-        </div>
       </div>
-      <div class="field">
-        <div class="control">
-          <input type="submit" @click="add_contact" value="Add" class="button is-primary">
-          <input type="submit" @click="set_add_status(false)" value="Cancel" class="button is-warning">
+      <div class="field-body">
+        <div class="field">
+          <div class="control" :class="{'is-loading': r._state.caption === 'pending'}">
+            <input type="text" class="input" v-model="r.caption"
+                   :class="{
+                    'is-focused': r._state.caption === 'edit',
+                    'is-static': r._state.caption === 'clean',
+                  }"
+                   :readonly="r._state.caption === 'clean'"
+                   @click="start_edit(r._idx, 'caption')"
+                   @blur="stop_edit(r._idx, 'caption')"
+            />
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-<!-- display the home page post -->
-  <div class="container block">
-    <h1 class="title">Home page</h1>
-    <table class="table is-striped is-fullwidth">
-      <tr>
-        <th></th>
-        <th>User</th>
-        <th>Caption</th>
-        <th></th>
-      </tr>
-      <tr v-for="r in rows">
-        <td>
-
-          <div v-if="!r.thumbnail">
-            <p class="control">
-              <div class="file is-info">
-                <label class="file-label">
-                  <input class="file-input" type="file"
-                         accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*"
-                         @change="upload_file($event, r._idx)">
-                  <span class="file-cta">
-                    <span class="file-label">
-                      <span><i class="fa fa-upload"></i></span>
-                    </span>
-                  </span>
-                </label>
-              </div>
-            </p>
-          </div>
-
-          <img v-if="r.thumbnail" width="400" :src="r.thumbnail" />
-
-        </td>
-        <td v-for="fn in ['first_name', 'last_name']">
-          <div class="control" :class="{'is-loading': r._state[fn] === 'pending'}" >
-            <input type="text" class="input" v-model="r[fn]"
-              :class="{
-                'is-focused': r._state[fn] === 'edit',
-                'is-static': r._state[fn] === 'clean',
-              }"
-              :readonly="r._state[fn] === 'clean'"
-              @click="start_edit(r._idx, fn)"
-              @blur="stop_edit(r._idx, fn)"
-            />
-          </div>
-        </td>
-        <td><button @click="delete_contact(r._idx)" class="button is-danger">
-          <i class="fa fa-trash"></i>delete</button></td>
-      </tr>
-    </table>
-    <button @click="set_add_status(true)" class="button is-primary">
-      <i class="fa fa-plus fa-fw"></i> Add post
-    </button>
-  </div>
-
-  <!-- display the comments and likes -->
-  <div class="section" id="vue-target" v-cloak>
-  <div class="container">
-     <a class="button is-success" href="[[=URL('add')]]">
-    <span class="icon"><i class="fa fa-plus"></i></span>
-    <span>Comments</span>
-  </a>
-    <table class="table is-striped is-fullwidth">
-      <tbody>
-        [[for row in post:]]
-        <tr>
-          <th>Post</th>
-          <td>[[=row.id]]</td>
-          <th>Post Caption</th>
-          <td>[[=row.user_name]]</td>
-          <th>Likes</th>
-          <td>[[=row.like]]</td>
-          <td>
-            <a class="button" href="[[=URL('edit', row.id)]]">
-              <span class="icon"><i class="fa fa-fw fa-pencil"></i></span> <span>Edit</span>
-            </a>
-            <a class="button" href="[[=URL('inc', row.id)]]">
-              <span>+1</span>
-            </a>
-            <a class="button" href="[[=URL('delete', row.id)]]">
-              <span>Delete</span>
-            </a>
-          </td>
-        </tr>
-        [[pass]]
-      </tbody>
-    </table>
+  <div class="columns">
+    <div class="column is-11"></div>
+    <div class="column is-1">
+      <div class="delete-button">
+        <button @click="delete_contact(r._idx)" class="button is-danger is-outlined is-small">
+          <i class="fa fa-trash"></i>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
-
-  <!--
-<div class="section" id="vue-target" v-cloak>
-  <div class="field">
-    <p class="control has-icons-right">
-      <input class="input" type="text" placeholder="Search users" v-model="search" @input="search_users">
-      <span class="icon is-small is-right clickable" @click="clear_search">
-        <i class="fa fa-times-circle"></i>
-      </span>
-    </p>
-  </div>
-
-  <div class="field has-addons" v-for="user in users">
-    <p class="control">
-      <button class="button">
-        <span>{{ user.username }}</span>
-      </button>
-    </p>
-    <p class="control">
-      <button @click="following[user.id] ? unfollow(user.id) : follow(user.id)" class="button" :class="{'is-success': following[user.id], 'is-danger': !following[user.id]}">
-        <span class="icon is-small">
-          <i :class="{'fa fa-times': following[user.id], 'fa fa-check': !following[user.id]}"></i>
-        </span>
-        <span>{{ following[user.id] ? 'Follow' : 'Unfollow' }}</span>
-      </button>
-    </p>
-  </div>
 </div>
 
--->
+</div>
 
 
 

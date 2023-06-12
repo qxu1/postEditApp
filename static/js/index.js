@@ -9,7 +9,7 @@ let init = (app) => {
     following: {},
     add_mode: false,
     add_first_name: "",
-    add_last_name: "",
+    add_caption: "",
     rows: [],
   };
 
@@ -44,65 +44,29 @@ let init = (app) => {
         });
     },
 
-    search_users: function () {
-      axios.get(get_users_url, { params: { q: this.search } }).then((result) => {
-        let users = result.data.users;
-        let sortedUsers = users.sort((a, b) => {
-          if (this.following[a.id] && !this.following[b.id]) {
-            return -1; // a comes before b
-          } else if (!this.following[a.id] && this.following[b.id]) {
-            return 1; // b comes before a
-          } else {
-            return 0; // maintain the current order
-          }
-        });
-        this.users = app.enumerate(sortedUsers);
-      });
-    },
+add_contact: function () {
+  axios.post(add_contact_url, {
+    first_name: '',
+    caption: '',
+  }).then(function (response) {
+    let new_row = {
+      id: response.data.id,
+      first_name: app.vue.add_first_name,
+      caption: app.vue.add_caption,
+      thumbnail: "",
+      _state: { first_name: "clean", caption: "clean" },
+      _idx: 0, // Set the _idx to 0 to insert at the beginning
+    };
+    app.vue.rows.unshift(new_row); // Add new row to the beginning of the array
+    app.reset_form();
+    app.set_add_status(false);
+  });
+},
 
-    loadUsers() {
-      axios.get(get_users_url, { params: { q: this.query } })
-        .then(response => {
-          this.users = response.data.users;
-        })
-        .catch(error => {
-          console.error(error);
-        });
-    },
-
-    searchUsers() {
-      this.loadUsers();
-    },
-
-    clear_search: function () {
-      this.search = "";
-      this.search_users();
-    },
-
-    add_contact: function () {
-      axios.post(add_contact_url, {
-        first_name: app.vue.add_first_name,
-        last_name: app.vue.add_last_name,
-      }).then(function (response) {
-        let n = app.vue.rows.length;
-        app.vue.rows.push();
-        let new_row = {
-          id: response.data.id,
-          first_name: app.vue.add_first_name,
-          last_name: app.vue.add_last_name,
-          thumbnail: "",
-          _state: { first_name: "clean", last_name: "clean" },
-          _idx: n,
-        };
-        app.vue.rows.push(new_row);
-        app.reset_form();
-        app.set_add_status(false);
-      });
-    },
 
     reset_form: function () {
       app.vue.add_first_name = "";
-      app.vue.add_last_name = "";
+      app.vue.add_caption = "";
     },
 
     delete_contact: function (row_idx) {
@@ -162,7 +126,7 @@ let init = (app) => {
 
   app.decorate = (a) => {
     a.map((e) => {
-      e._state = { first_name: "clean", last_name: "clean" };
+      e._state = { first_name: "clean", caption: "clean" };
     });
     return a;
   };
@@ -184,7 +148,9 @@ let init = (app) => {
     });
 
     axios.get(load_contacts_url).then(function (response) {
+      //app.vue.rows = app.decorate(app.enumerate(response.data.rows));
       app.vue.rows = app.decorate(app.enumerate(response.data.rows));
+      app.vue.rows.reverse();
     });
   };
 

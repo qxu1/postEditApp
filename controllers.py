@@ -40,7 +40,7 @@ MAX_RETURNED_USERS = 20  # Our searches do not return more than 20 users.
 MAX_RESULTS = 20  # Maximum number of returned meows.
 
 @action('index')
-@action.uses('index.html',db, auth, url_signer)
+@action.uses('index.html',db, auth.user, url_signer)
 def index():
     post = db(db.post.user_email == get_user_email()).select()
     return dict(
@@ -55,6 +55,7 @@ def index():
         get_users_url=URL('get_users', signer=url_signer),
         follow_url=URL('set_follow', signer=url_signer),
     )
+
 @action('my_callback')
 @action.uses(url_signer.verify())
 def my_callback():
@@ -62,6 +63,7 @@ def my_callback():
         orderby=~db.post.id
     )
     return dict(post=post)
+
 @action('add', method=['GET', 'POST'])
 @action.uses(db, session, auth.user, 'add.html')
 def addpost():
@@ -115,6 +117,7 @@ def add_contact():
         first_name=request.json.get('first_name'),
         last_name=request.json.get('last_name'),
     )
+
     return dict(id=id)
 
 @action('delete_contact')
@@ -163,7 +166,6 @@ def get_users():
     for user in users:
         user['following'] = user['id'] in followed_user_ids
     return dict(users=users)
-
 
 @action('set_follow', method='POST')
 @action.uses(auth.user, url_signer.verify(), db)
