@@ -39,29 +39,36 @@ url_signer = URLSigner(session)
 MAX_RETURNED_USERS = 20  # Our searches do not return more than 20 users.
 MAX_RESULTS = 20  # Maximum number of returned meows.
 
+# for all the variable and function: load_contact is equal to the meaning of load_imageBox
 @action('index')
-@action.uses('index.html',db, auth.user, url_signer)
+@action.uses('index.html', db, auth.user, session, url_signer)
 def index():
     post = db(db.post.user_email == get_user_email()).select()
+    selected_color = session.get('selectedColor', 'no-color')
+    set_add_status_url = URL('set_add_status', signer=url_signer)
+    mark_contact_url = URL('mark_contact', signer=url_signer)
     return dict(
-        # This is the signed URL for the callback.
-        load_contacts_url = URL('load_contacts', signer=url_signer),
-        add_contact_url = URL('add_contact', signer=url_signer),
-        delete_contact_url = URL('delete_contact', signer=url_signer),
-        edit_contact_url = URL('edit_contact', signer=url_signer),
-        upload_thumbnail_url = URL('upload_thumbnail', signer=url_signer),
+        load_contacts_url=URL('load_contacts', signer=url_signer),
+        add_contact_url=URL('add_contact', signer=url_signer),
+        delete_contact_url=URL('delete_contact', signer=url_signer),
+        edit_contact_url=URL('edit_contact', signer=url_signer),
+        upload_thumbnail_url=URL('upload_thumbnail', signer=url_signer),
         post=post,
         my_callback_url=URL('my_callback', signer=url_signer),
         get_users_url=URL('get_users', signer=url_signer),
         follow_url=URL('set_follow', signer=url_signer),
+        selectedColor=selected_color,
+        set_add_status_url=set_add_status_url,
+        mark_contact_url = mark_contact_url,
     )
 
 @action('my_callback')
 @action.uses(url_signer.verify())
 def my_callback():
-    post = db(db.post).select(
-        orderby=~db.post.id
-    )
+    post = db(db.post).select(orderby=~db.post.id)
+    for p in post:
+        comments = db(db.comment.post_id == p.id).select(orderby=db.comment.id)
+        p.comments = comments
     return dict(post=post)
 
 @action('add', method=['GET', 'POST'])
@@ -71,18 +78,6 @@ def addpost():
     if form.accepted:
         redirect(URL('index'))
     return dict(form=form)
-
-@action('inc/<post_id:int>')
-@action.uses(db, session, auth.user,'inc.html')
-def likecount(post_id=None):
-    post = db.post[post_id]
-    if post is None:
-        redirect(URL('index'))
-    if post.user_email != get_user_email():
-        redirect(URL('index'))
-    post.like += 1
-    post.update_record()
-    redirect(URL('index'))
 
 @action('edit/<post_id:int>', method=['GET', 'POST'])
 @action.uses(db, session, auth.user, 'edit.html')
@@ -111,14 +106,19 @@ def load_contacts():
     return dict(rows=rows)
 
 @action('add_contact', method="POST")
-@action.uses(url_signer.verify(), db)
+@action.uses(url_signer.verify(), db, auth)
 def add_contact():
+    first_name = auth.current_user.get('first_name')  # Get the logged-in user's first name
     id = db.contact.insert(
-        first_name=request.json.get('first_name'),
-        last_name=request.json.get('last_name'),
+        first_name=first_name,
+        title=request.json.get('title'),
+        caption=request.json.get('caption'),
+        thumbnail=request.json.get('thumbnail'),
+        color=request.json.get('color'),
     )
+    session['selectedColor'] = request.json.get('color')
+    return dict(id=id, first_name=first_name)  # Include the first name in the response
 
-    return dict(id=id)
 
 @action('delete_contact')
 @action.uses(url_signer.verify(), db)
@@ -137,6 +137,8 @@ def edit_contact():
     value = request.json.get("value")
     print(id, field, value)
     db(db.contact.id == id).update(**{field: value})
+    if field == 'color':
+        session['selectedColor'] = value  # Store the selected color in the session
     time.sleep(1) # debugging
     return "ok"
 
@@ -147,25 +149,6 @@ def upload_thumbnail():
     thumbnail = request.json.get("thumbnail")
     db(db.contact.id == contact_id).update(thumbnail=thumbnail)
     return "ok"
-
-@action('get_users')
-@action.uses(auth.user, url_signer.verify(), db)
-def get_users():
-    q = request.params.get('q', "")
-    followed_users = db(db.follow.user_id == auth.current_user.get('id')).select().as_list()
-    followed_user_ids = [followed['follows_id'] for followed in followed_users]
-    users = db((db.auth_user.id != auth.current_user.get('id')) &
-               (db.auth_user.username.startswith(q)) &
-               (db.auth_user.id.belongs(followed_user_ids))).select().as_list()[:MAX_RETURNED_USERS]
-    remaining_users = MAX_RETURNED_USERS - len(users)
-    if remaining_users > 0:
-        non_followed_users = db((db.auth_user.id != auth.current_user.get('id')) &
-                                (db.auth_user.username.startswith(q)) &
-                                (~db.auth_user.id.belongs(followed_user_ids))).select().as_list()[:remaining_users]
-        users.extend(non_followed_users)
-    for user in users:
-        user['following'] = user['id'] in followed_user_ids
-    return dict(users=users)
 
 @action('set_follow', method='POST')
 @action.uses(auth.user, url_signer.verify(), db)
@@ -178,3 +161,58 @@ def set_follow():
     else:
         db((db.follow.user_id == auth.current_user.get('id')) & (db.follow.follows_id == user_id)).delete()
     return 'ok'
+
+@action('set_add_status', method='POST')
+@action.uses(url_signer.verify(), session)
+def set_add_status():
+    selected_color = request.json.get('selected_color')
+    session['selectedColor'] = selected_color
+    return "ok"
+
+@action('comments/<post_id:int>')
+@action.uses(db, auth.user, 'comments.html')
+def comments(post_id=None):
+    assert post_id is not None
+    return dict(post_id=post_id)
+
+@action('mark_contact', method='POST')
+@action.uses(url_signer.verify(), db)
+def mark_contact():
+    contact_id = request.json.get('contact_id')
+    mark = request.json.get('mark')
+    contact = db.contact[contact_id]
+    if contact:
+        contact.update_record(mark=mark)
+        marked_contact_ids = [c.id for c in db(db.contact.mark == True).select()]
+        print("Marked Contact IDs:", marked_contact_ids)  # 打印被标记为 True 的所有 contact id
+        return "ok"
+    else:
+        abort(404, "Contact not found")
+
+
+
+@action('fav')
+@action.uses('fav.html', db, auth.user, session, url_signer)
+def fav():
+    post = db(db.post.user_email == get_user_email()).select()
+    selected_color = session.get('selectedColor', 'no-color')
+    set_add_status_url = URL('set_add_status', signer=url_signer)
+    mark_contact_url = URL('mark_contact', signer=url_signer)
+    return dict(
+        load_contacts_url=URL('load_contacts', signer=url_signer),
+        add_contact_url=URL('add_contact', signer=url_signer),
+        delete_contact_url=URL('delete_contact', signer=url_signer),
+        edit_contact_url=URL('edit_contact', signer=url_signer),
+        upload_thumbnail_url=URL('upload_thumbnail', signer=url_signer),
+        post=post,
+        my_callback_url=URL('my_callback', signer=url_signer),
+        get_users_url=URL('get_users', signer=url_signer),
+        follow_url=URL('set_follow', signer=url_signer),
+        selectedColor=selected_color,
+        set_add_status_url=set_add_status_url,
+        mark_contact_url = mark_contact_url,
+    )
+
+
+
+

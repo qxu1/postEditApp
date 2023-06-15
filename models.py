@@ -22,19 +22,25 @@ def get_time():
 
 db.define_table('contact',
                 Field('first_name'),
-                Field('last_name'),
+                Field('title'),
                 Field('thumbnail', 'text'),
                 Field('caption'),
+                Field('color'),
+                Field('mark', 'boolean', default=False),
                 )
 
 db.define_table(
     'post',
     Field('user_name', requires=IS_NOT_EMPTY()),
-    Field('like', 'integer', default=0, requires=IS_INT_IN_RANGE(0, 1e6)),
+    #Field('like', 'integer', default=0, requires=IS_INT_IN_RANGE(0, 1e6)),
     Field('user_email', default=get_user_email),
-    Field('picture', 'upload'),
-    Field('caption', 'text'),
     Field('contact_id', 'reference contact')
+)
+
+db.define_table(
+    'comment',
+    Field('post_id', 'reference post'),
+    Field('content', 'text'),
 )
 
 db.define_table(
@@ -44,3 +50,4 @@ db.define_table(
 )
 
 db.commit()
+
