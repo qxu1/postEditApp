@@ -24,7 +24,7 @@ Delete Post Action:
 
 (An Image = A Contact）
 
-Load Contacts API (Load Image API):
+Load Contacts Action (Load Image Action):
 - The `load_contacts` API retrieves contact records from the database and returns them as a dictionary.
 - The `db` object is used to query the 'contact' table and fetch all rows.
 - The rows are converted to a list of dictionaries and returned as the API response.
