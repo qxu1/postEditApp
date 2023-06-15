@@ -2,7 +2,7 @@
 Demo link: https://www.youtube.com/watch?v=Ag0X3o8nUJ8
 Title: Implementation Description of a Web Application with Actions and APIs
 
-It's like an image gallery that allows people to post and delete photos freely, with a favorite function and a separate favorite page. At the same time, it has a very cool and dynamically changing background color. Each photo is packed in a very cool box, and there are three colors of the box for you to choose from.
+It's like an image galler wall that allows people to post and delete photos freely, with a favorite function and a separate favorite page. At the same time, it has a very cool and dynamically changing background color. Each photo is packed in a very cool box, and there are three colors of the box for you to choose from.
 
 
  Add Post Action:
