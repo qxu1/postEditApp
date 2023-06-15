@@ -28,7 +28,7 @@ Load Contacts API (Load Image API):
 - The `db` object is used to query the 'contact' table and fetch all rows.
 - The rows are converted to a list of dictionaries and returned as the API response.
 
-Add Contact API (Add Image API):
+Add Contact Action (Add Image Action):
 - The `add_contact` API adds a new contact record to the database.
 - The current user's first name is retrieved using the `auth.current_user` object.
 - The contact data is extracted from the JSON payload received in the request.
@@ -38,13 +38,13 @@ Add Contact API (Add Image API):
 - The selected color is stored in the session for future reference.
 - The contact ID and the current user's first name are returned as the API response.
 
-Delete Contact API (Delete Image API):
+Delete Contact Action (Delete Image Action):
 - The `delete_contact` API deletes a contact record from the database based on the provided contact ID.
 - The contact ID is extracted from the request parameters.
 - The corresponding contact record is deleted using the `db` object.
 - A simple 'ok' string is returned as the API response.
 
-Edit Contact API (Edit Image API):
+Edit Contact Action (Edit Image Action):
 - The `edit_contact` API updates a contact record in the database.
 - The contact ID, field, and value are extracted from the JSON payload in the request.
 - The `db` object is used to update the contact record with the provided field and value.
@@ -52,20 +52,20 @@ Edit Contact API (Edit Image API):
 - A delay of 1 second is added to simulate processing time (for debugging purposes).
 - An 'ok' string is returned as the API response.
 
-Upload Thumbnail API:
+Upload Thumbnail Action:
 - The `upload_thumbnail` API updates the thumbnail field of a contact record in the database.
 - The contact ID and thumbnail URL are extracted from the JSON payload.
 - The `db` object is used to update the contact record with the provided thumbnail URL.
 - An 'ok' string is returned as the API response.
 
-Set Add Status API:
+Set Add Status Action:
 - The `set_add_status` API updates the selected color in the session.
 - The selected color is extracted from the JSON payload.
 - The selected color is stored in the session for future reference.
 - An 'ok' string is returned as the API response.
 
 
-Mark Contact API(Mark Image API):
+Mark Contact Action(Mark Image Action):
 - The `mark_contact` API updates the 'mark' field of a contact record in the database.
 - The contact ID and mark value are extracted from the JSON payload.
 - The contact record is retrieved from the database using the contact ID.
