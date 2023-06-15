@@ -22,7 +22,8 @@ Delete Post Action:
 - It retrieves the post based on the provided `post_id` parameter and deletes it from the database.
 - After deletion, the user is redirected to the homepage.
 
-(Treat an Image as a Contact）
+(An Image = A Contact）
+
 Load Contacts API (Load Image API):
 - The `load_contacts` API retrieves contact records from the database and returns them as a dictionary.
 - The `db` object is used to query the 'contact' table and fetch all rows.
