@@ -1,5 +1,6 @@
 # postEditApp
 Demo link: https://www.youtube.com/watch?v=Ag0X3o8nUJ8
+Project Proposal https://docs.google.com/document/d/1hPpH5X7a3MbkKqjToIvd1txMZaCKpSl7l7iEat7NXDo/edit?usp=sharing
 Title: Implementation Description of a Web Application with Actions and APIs
 
 It's like an image gallery wall that allows people to post and delete photos freely, with a favorite function and a separate favorite page. At the same time, it has a very cool and dynamically changing background color. Each photo is packed in a very cool box, and there are three colors of the box for you to choose from.
